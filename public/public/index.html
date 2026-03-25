@@ -598,18 +598,22 @@ async function sendMsg() {
   document.getElementById('sendBtn').disabled = true;
   const typing = addMsg('typing', '답변 생성 중...');
   try {
-    const res = await fetch('/api/chat', {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
-      body:JSON.stringify({ messages: msgs })
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system: SYSTEM,
+        messages: msgs
+      })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    const reply = data.reply || '죄송합니다, 답변을 가져오지 못했습니다.';
+    const reply = data.content?.[0]?.text || '죄송합니다, 답변을 가져오지 못했습니다.';
     typing.remove(); addMsg('bot', reply); msgs.push({ role:'assistant', content:reply });
   } catch(e) {
-    typing.remove();
-    addMsg('bot', '⚠️ 서버 연결이 필요합니다. 실제 배포 환경에서 정상 작동합니다.');
+    typing.remove(); addMsg('bot', '죄송합니다, 답변을 가져오지 못했습니다.');
   }
   document.getElementById('sendBtn').disabled = false;
 }
